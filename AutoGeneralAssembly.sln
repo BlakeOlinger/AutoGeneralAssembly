@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29411.108
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoGeneralAssembly", "AutoGeneralAssembly\AutoGeneralAssembly.csproj", "{BBF664C6-11BD-45E4-9912-C7A903E8A355}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BBF664C6-11BD-45E4-9912-C7A903E8A355}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBF664C6-11BD-45E4-9912-C7A903E8A355}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBF664C6-11BD-45E4-9912-C7A903E8A355}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBF664C6-11BD-45E4-9912-C7A903E8A355}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B3070863-0854-4D7C-8A3F-62A06AF618B4}
+	EndGlobalSection
+EndGlobal
