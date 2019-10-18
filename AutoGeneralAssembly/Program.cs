@@ -12,6 +12,8 @@ namespace AutoGeneralAssembly
     {
         static void Main(string[] args)
         {
+            var noFlipDebug = true;
+            var noRebuildDebug = true;
             var swInstance = new SldWorks.SldWorks();
             var model = (ModelDoc2)swInstance.ActiveDoc;
 
@@ -36,104 +38,100 @@ namespace AutoGeneralAssembly
             // -> write the oppisite negation state values to the assembly config file
             if (hasMateFlips)
             {
+                var dimensions = new string[appDataLines.Length - 1];
+                var dimensionsIndex = dimensions.Length;
+                
                 // generate flip mates array
                 // assumes first line is always a path
-                var dimensions = new string[appDataLines.Length - 1];
                 index = 0;
                 foreach (string line in appDataLines)
-                {
-                    if (line.Contains("Distance"))
                     {
-                        dimensions[index++] = line.Trim();
-                    }
-                }
-
-                // get mate list reference from the list of top-level features
-                var features = (Feature)model.FirstFeature();
-                Feature mates = default(Feature);
-                var stop = true;
-                while (features != null && stop)
-                {
-                    if ("MateGroup" == features.GetTypeName())
-                    {
-                        mates = (Feature)features.GetFirstSubFeature();
-                        stop = false;
-                    } else
-                    {
-                        features = (Feature)features.GetNextFeature();
-                    }
-                }
-
-                // iterate through mate list and flip those that correspond with the
-                // distance list item
-                var dimensionsIndex = dimensions.Length;
-                while (mates != null && dimensionsIndex > 0)
-                {
-                    var mate = (Mate2)mates.GetSpecificFeature2();
-                    var mateName = mates.Name.Trim();
-                    foreach (string dimension in dimensions)
-                    {
-                        if (mateName.Contains(dimension))
+                        if (line.Contains("Distance"))
                         {
-                            mate.Flipped = !mate.Flipped;
-                            --dimensionsIndex;
+                            dimensions[index++] = line.Trim();
                         }
                     }
 
-                    mates = (Feature)mates.GetNextSubFeature();
+                if (!noFlipDebug)
+                {
+                    // get mate list reference from the list of top-level features
+                    var features = (Feature)model.FirstFeature();
+                    Feature mates = default(Feature);
+                    var stop = true;
+                    while (features != null && stop)
+                    {
+                        if ("MateGroup" == features.GetTypeName())
+                        {
+                            mates = (Feature)features.GetFirstSubFeature();
+                            stop = false;
+                        }
+                        else
+                        {
+                            features = (Feature)features.GetNextFeature();
+                        }
+                    }
+
+                    // iterate through mate list and flip those that correspond with the
+                    // distance list item
+                    while (mates != null && dimensionsIndex > 0)
+                    {
+                        var mate = (Mate2)mates.GetSpecificFeature2();
+                        var mateName = mates.Name.Trim();
+                        foreach (string dimension in dimensions)
+                        {
+                            if (mateName.Contains(dimension))
+                            {
+                                mate.Flipped = !mate.Flipped;
+                                --dimensionsIndex;
+                            }
+                        }
+
+                        mates = (Feature)mates.GetNextSubFeature();
+                    }
                 }
 
                 // write to assembly config the opposite negation state for those distances
                 // generate line number - negation flip dictionary
                 // compare distance list to the first instance of an identifying line
                 // then identify that dimension's negation state line
+                var assemblyConfigPath = appDataLines[0];
+                var assemblyConfigLines = System.IO.File.ReadAllLines(assemblyConfigPath);
                 
+                // populate assembly feature list
+                dimensionsIndex = dimensions.Length;
+                index = 0;
+                var featureList = new string[dimensions.Length];
+                var featureListIndex = 0;
+                foreach (string line in assemblyConfigLines)
+                {
+                    foreach (string dimension in dimensions)
+                    {
+                        if (line.Contains(dimension))
+                        {
+                            featureList[featureListIndex++] = line.Split('=')[1]
+                                .Replace("Offset", "")
+                                .Replace("\"", "").Trim();
+                            if (--dimensionsIndex == 0)
+                            {
+                                break;
+                            }
+                        }
+                            ++index;
+                    }
+                }
+                
+                // generate new assembly configfiles
+                for (var i = 0; i < assemblyConfigLines.Length; ++i)
+                {
+
+                }
             }
 
             // rebuild
-            //model.ForceRebuild3(true);
-            
-            // if rebuild app data contains a dimension list - creates a new array for the mates that need to be flipped
-            /*if (rebuildAppDataLines.Length >= 2)
+            if (!noRebuildDebug)
             {
-                if (rebuildAppDataLines[1].Contains("Distance"))
-                {
-                    matesToFlip = new string[rebuildAppDataLines.Length - 1];
-                    for (var i = 1; i < rebuildAppDataLines.Length; ++i)
-                    {
-                        matesToFlip[i - 1] = rebuildAppDataLines[i];
-                    }
-                    // flips the mate if the X/Z offset is negative relative to current position
-                    var cutOff = 5_000;
-                    var firstFeature = (Feature)model.FirstFeature();
-                    while (firstFeature != null && cutOff-- > 0)
-                    {
-                        if ("MateGroup" == firstFeature.GetTypeName())
-                        {
-                            var mateGroup = (Feature)firstFeature.GetFirstSubFeature();
-                            var index = 0;
-                            while (mateGroup != null)
-                            {
-                                var mate = (Mate2)mateGroup.GetSpecificFeature2();
-                                var mateName = mateGroup.Name;
-                                foreach (string dimension in matesToFlip)
-                                {
-                                    if (dimension == mateName)
-                                    {
-                                        mate.Flipped = !mate.Flipped;
-                                    }
-                                }
-
-                                mateGroup = (Feature)mateGroup.GetNextSubFeature();
-                                ++index;
-                            }
-                        }
-                        firstFeature = (Feature)firstFeature.GetNextFeature();
-                    }
-
-                    // remove the listed mates so it doesn't flip them again
-                    System.IO.File.WriteAllText(rebuildAppDataPath, assemblyConfigPath);
-                }*/
+                model.ForceRebuild3(true);
+            }
         }
     }
 }
