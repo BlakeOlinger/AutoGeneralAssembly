@@ -12,8 +12,10 @@ namespace AutoGeneralAssembly
     {
         static void Main(string[] args)
         {
-            var noFlipDebug = true;
-            var noRebuildDebug = true;
+            var noFlipDebug = false;
+            var noRebuildDebug = false;
+            var noWriteDebug = false;
+
             var swInstance = new SldWorks.SldWorks();
             var model = (ModelDoc2)swInstance.ActiveDoc;
 
@@ -119,11 +121,38 @@ namespace AutoGeneralAssembly
                             ++index;
                     }
                 }
-                
+
                 // generate new assembly configfiles
+                dimensionsIndex = dimensions.Length;
                 for (var i = 0; i < assemblyConfigLines.Length; ++i)
                 {
+                    var line = assemblyConfigLines[i];
+                    
+                    foreach (string feature in featureList)
+                    {
+                        if (line.Contains(feature) && line.Contains("Negative"))
+                        {
+                            var newLineSegments = line.Split('=');
+                            var newLine = newLineSegments[0].Trim() + "= " +
+                                (newLineSegments[1].Contains("1") ? "0" : "1");
 
+                            assemblyConfigLines[i] = newLine;
+                        }
+                    }
+                }
+                var builder = "";
+                foreach (string line in assemblyConfigLines)
+                {
+                    builder += line + "\n";
+                }
+
+                // write to assembly config
+                // and remove the list of mates to flip from app data
+                if (!noWriteDebug)
+                {
+                    System.IO.File.WriteAllText(assemblyConfigPath, builder);
+
+                    System.IO.File.WriteAllText(appDataPath, assemblyConfigPath);
                 }
             }
 
